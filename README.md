@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>🌐 Language / Idioma</strong><br>
-  <a href="#english">English</a> · <a href="#portugues-brasil">Português (Brasil)</a>
+  <a href="#english">🇪🇳 English</a> · <a href="#portugues-brasil">Português (Brasil)</a>
 </p>
 
 > **Localization note:** GitHub does not support automatic locale detection or conditional rendering inside a single `README.md`. This bilingual README keeps both translations in one file and uses stable language anchors for fast navigation. Browser/GitHub translation features can still be used normally. For true automatic locale switching, separate localized files or a GitHub Pages site would be required.
@@ -11,7 +11,9 @@
 
 <a id="english"></a>
 
-## 🇬🇧 English
+## 🇪🇳 English
+
+> ⚠️ **Disclaimer:** This procedure has **not been validated or endorsed by C0DEbrained**. It is an independent workaround documented from testing on a K1C 2025. Anyone choosing to follow it does so **on their own machine and at their own risk**. Make backups of any files you modify and be prepared to restore the original configuration if necessary.
 
 ### Goal
 
@@ -462,6 +464,8 @@ Entware mjpg-streamer 2019-05-24-1
 <a id="portugues-brasil"></a>
 
 ## 🇧🇷 Português (Brasil)
+
+> ⚠️ **Aviso:** Este procedimento **não foi validado nem endossado pelo C0DEbrained**. Trata-se de um contorno independente, documentado a partir de testes realizados em uma K1C 2025. Cada pessoa que optar por segui-lo deve executá-lo **em sua própria máquina, por sua própria conta e risco**. Faça backup de todos os arquivos que forem alterados e esteja preparado para restaurar a configuração original, se necessário.
 
 ### Objetivo
 
