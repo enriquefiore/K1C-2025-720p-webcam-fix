@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>🌐 Language / Idioma</strong><br>
-  <a href="#english">🇪🇳 English</a> · <a href="#portugues-brasil">Português (Brasil)</a>
+  <a href="#english">English</a> · <a href="#portugues-brasil">Português (Brasil)</a>
 </p>
 
 > **Localization note:** GitHub does not support automatic locale detection or conditional rendering inside a single `README.md`. This bilingual README keeps both translations in one file and uses stable language anchors for fast navigation. Browser/GitHub translation features can still be used normally. For true automatic locale switching, separate localized files or a GitHub Pages site would be required.
