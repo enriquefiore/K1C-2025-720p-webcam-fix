@@ -1,6 +1,3 @@
-# K1C-2025-720p-webcam-fix
-An "hands-on" camera fix - Um reparo de camera "mão-na-massa"
-
 # K1C 2025 Built-in Camera — True 16:9 / 1280×720 Fix
 
 <p align="center">
