@@ -1,10 +1,12 @@
-# K1C 2025 Built-in Camera — True 16:9 / 1280×720 Fix
+# 📷 K1C 2025 Built-in Camera — True 16:9 / 1280×720 Fix
 
-[PT Português](./LEIAME.md)
+🌐 **Language:** English · [PT-BR Português](./LEIAME.md)
 
-> ⚠️ **Disclaimer:** This procedure has **not been validated or endorsed by C0DEbrained**. It is an independent workaround documented from testing on a K1C 2025. Anyone choosing to follow it does so **on their own machine and at their own risk**. Make backups of any files you modify and be prepared to restore the original configuration if necessary.
+> [!WARNING]
+> **Disclaimer**  
+> This procedure has **not been validated or endorsed by C0DEbrained**. It is an independent workaround documented from testing on a K1C 2025. Anyone choosing to follow it does so **on their own machine and at their own risk**. Make backups of any files you modify and be prepared to restore the original configuration if necessary.
 
-### Goal
+## 🎯 Goal
 
 This procedure fixes an issue observed on the **Creality K1C 2025** where Mainsail is configured with `aspect_ratio: 16:9`, but the camera is still displayed as **4:3**.
 
@@ -12,13 +14,13 @@ On the tested printer, Mainsail was not the root cause. The camera supported 128
 
 The validated workaround is to use an older compatible **Entware mjpg-streamer** build, leave the original firmware files untouched, and make the camera service use the `/opt` binary and plugins.
 
-> **Validated environment:** K1C 2025, MIPS architecture, built-in camera on `/dev/video0`, Mainsail, C0DEbrained's Helper Script 2025.
->
-> **Validated result:** MJPEG 1280×720 at 15 fps, true 16:9 aspect ratio, persistent after reboot.
+> [!NOTE]
+> **Validated environment:** K1C 2025, MIPS architecture, built-in camera on `/dev/video0`, Mainsail, C0DEbrained's Helper Script 2025.  
+> **Validated result:** MJPEG **1280×720 @ 15 fps**, true **16:9**, persistent after reboot.
 
 ---
 
-### 1. Symptom
+## 1. 🔎 Symptom
 
 Even when Moonraker/Mainsail contains:
 
@@ -43,7 +45,7 @@ the image is still 4:3.
 
 ---
 
-### 2. Confirm the root cause
+## 2. 🧪 Confirm the root cause
 
 SSH into the printer and check the active capture format:
 
@@ -81,7 +83,7 @@ including MJPG 1280×720 at 15 fps.
 
 ---
 
-### 3. Why the native streamer does not solve it
+## 3. ⚠️ Why the native streamer does not solve it
 
 The Helper Script 2025 camera service currently starts roughly as follows:
 
@@ -106,7 +108,7 @@ Pre-setting the format with `v4l2-ctl` does not work either: the native UVC plug
 
 ---
 
-### 4. Install Entware
+## 4. 📦 Install Entware
 
 If Entware is not installed yet, start the Helper Script:
 
@@ -128,7 +130,7 @@ The legacy Entware binary expects `/opt/lib/ld.so.1`, so the Entware runtime mus
 
 ---
 
-### 5. Download the compatible mjpg-streamer packages
+## 5. ⬇️ Download the compatible mjpg-streamer packages
 
 The versions validated in this workaround are:
 
@@ -179,7 +181,7 @@ file /tmp/mjpg-streamer.ipk
 
 ---
 
-### 6. Install the packages
+## 6. 🧩 Install the packages
 
 If `libjpeg` is required:
 
@@ -206,7 +208,7 @@ ls -lh /opt/lib/mjpg-streamer/output_http.so
 
 ---
 
-### 7. Test 1280×720 before changing the boot service
+## 7. ✅ Test 1280×720 before changing the boot service
 
 Stop any running streamer:
 
@@ -256,11 +258,12 @@ Width/Height : 1280/720
 Pixel Format : 'MJPG'
 ```
 
-Once confirmed, stop the foreground process with `Ctrl+C`.
+> [!TIP]
+> Once the 16:9 stream is confirmed, stop the foreground process with `Ctrl+C` before applying the persistent service change.
 
 ---
 
-### 8. Make the fix persistent
+## 8. 💾 Make the fix persistent
 
 On the tested installation, the active service is:
 
@@ -345,9 +348,9 @@ v4l2-ctl -d /dev/video0 --get-fmt-video
 
 ---
 
-### 9. Quick troubleshooting
+## 9. 🛠️ Quick troubleshooting
 
-#### It is still 640×480
+### 🔸 It is still 640×480
 
 Inspect the real process command line:
 
@@ -359,7 +362,7 @@ echo
 
 It must use `/opt/bin/mjpg_streamer`, load plugins from `/opt/lib/mjpg-streamer/`, and contain `-r 1280x720`.
 
-#### `undefined symbol: parse_resolution_opt`
+### 🔸 `undefined symbol: parse_resolution_opt`
 
 You are most likely still loading the native plugin:
 
@@ -375,11 +378,11 @@ Use:
 
 with `/opt/bin/mjpg_streamer`.
 
-#### `/opt/bin/mjpg_streamer: not found`
+### 🔸 `/opt/bin/mjpg_streamer: not found`
 
 Entware or the archived packages have not been installed correctly.
 
-#### Nothing is listening on port 8080
+### 🔸 Nothing is listening on port 8080
 
 Check:
 
@@ -388,7 +391,7 @@ ps w | grep '[m]jpg_streamer'
 netstat -lntp 2>/dev/null | grep ':8080'
 ```
 
-#### Mainsail still reserves the wrong aspect ratio
+### 🔸 Mainsail still reserves the wrong aspect ratio
 
 Verify that the webcam block contains:
 
@@ -400,7 +403,7 @@ Restart Moonraker/Mainsail as needed.
 
 ---
 
-### 10. Rollback
+## 10. ↩️ Rollback
 
 To restore the previous service:
 
@@ -418,7 +421,7 @@ Do not remove Entware if other printer features depend on it.
 
 ---
 
-### Root cause summary
+## 🧠 Root cause summary
 
 ```text
 K1C 2025 camera (/dev/video0)
@@ -438,14 +441,10 @@ Entware mjpg-streamer 2019-05-24-1
                 └── MJPEG 1280×720 @ 15 fps ✅ 16:9
 ```
 
-### Technical references
+## 📚 Technical references
 
 - C0DEbrained/Creality-Helper-Script-2025 — current K1C 2025 built-in camera service: https://github.com/C0DEbrained/Creality-Helper-Script-2025/blob/main/files/services/S50builtin_camera-k1c-2025
 - C0DEbrained/Creality-Helper-Script-2025 — camera install/configuration logic: https://github.com/C0DEbrained/Creality-Helper-Script-2025/blob/main/scripts/usb_camera.sh
 - mjpg-streamer upstream — `parse_resolution_opt` issue: https://github.com/jacksonliam/mjpg-streamer/issues/414
 - Historical Entware package record for 2019-05-24-1 and `libjpeg 9c-2`: https://forum.keenetic.ru/topic/7713-mjpg-streamer-%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2%D0%B5%D0%B1-%D0%BA%D0%B0%D0%BC%D0%B5%D1%80%D1%8B/page/3/
-
-
-
-
 ---
