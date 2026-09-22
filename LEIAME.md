@@ -350,7 +350,68 @@ v4l2-ctl -d /dev/video0 --get-fmt-video
 
 ---
 
-## 9. 🛠️ Diagnóstico rápido de problemas
+## 9. ⚠️ Problema conhecido: o Klipper pode parar durante a renderização de um timelapse grande
+
+Na K1C 2025 testada, foi observado um segundo problema após **impressões longas/grandes** com o Moonraker Timelapse ativado. Quando a impressão termina e o timelapse começa a ser renderizado, a impressora pode parecer temporariamente travada ou ficar inacessível pela interface web. Quando o Mainsail volta a responder, ele pode informar que o **Moonraker está funcionando, mas não consegue se conectar ao Klipper**, enquanto a renderização do timelapse ainda está em andamento.
+
+![Mainsail mostrando o Moonraker desconectado do Klipper enquanto o timelapse é renderizado](./assets/k1c_timelapse_klipper_disconnected.png)
+
+No caso observado, o **serviço do Klipper não estava mais em execução** e precisou ser iniciado novamente manualmente.
+
+> [!IMPORTANT]
+> Esse comportamento foi **observado**, mas sua causa exata ainda não foi confirmada. Ele não deve ser descrito como uma consequência comprovada do contorno da câmera em 1280×720. Uma hipótese importante a investigar é pressão de recursos durante a renderização pelo FFmpeg/timelapse no hardware de memória limitada da K1C, mas os logs são necessários para diferenciar um OOM kill de uma interação entre serviço/firmware.
+
+### Recuperação segura após a impressão ter terminado completamente
+
+Se a impressão já terminou e o Mainsail mostra o Klipper como desconectado, reinicie o serviço do Klipper por SSH:
+
+```sh
+/etc/init.d/S55klipper_service restart
+```
+
+O Helper Script também oferece **Tools → Restart Klipper service**.
+
+Antes de reiniciar o Klipper, confirme que a impressão realmente terminou e que não existe movimento ativo que precise ser preservado.
+
+### Colete dados antes de reiniciar o Klipper
+
+Se o SSH ainda estiver disponível, salve primeiro estas informações:
+
+```sh
+date
+uptime
+free -m
+ps w | grep -E '[k]lippy|[m]oonraker|[f]fmpeg|[m]jpg_streamer'
+dmesg | grep -iE 'oom|out of memory|killed process' | tail -30
+```
+
+Sempre que possível, preserve também os logs atuais:
+
+```sh
+tail -n 200 /usr/data/printer_data/logs/klippy.log
+tail -n 200 /usr/data/printer_data/logs/moonraker.log
+```
+
+Se o `dmesg` mostrar um OOM kill envolvendo o Klipper ou outro processo crítico, a correção adequada é reduzir a pressão causada pela renderização, e não apenas reiniciar automaticamente o Klipper.
+
+### Mitigação recomendada enquanto a causa é investigada
+
+O Moonraker Timelapse permite desativar a renderização automática ao final da impressão. Para impressões grandes, considere configurar:
+
+```ini
+autorender: False
+```
+
+Assim a impressão termina sem iniciar o FFmpeg imediatamente. O timelapse pode ser renderizado depois, quando uma eventual interrupção temporária do Klipper for menos problemática.
+
+Se a renderização automática for necessária e o problema continuar, outra alternativa conservadora é usar a câmera em **640×360 @ 15 fps**. A imagem continua sendo 16:9 real, mas cada quadro possui apenas um quarto da quantidade de pixels de 1280×720.
+
+> [!CAUTION]
+> Ainda **não** é recomendável criar um loop automático para reiniciar o Klipper. Se o processo estiver sendo encerrado por falta de memória, um watchdog pode apenas reiniciá-lo no mesmo cenário de pressão de recursos. Primeiro é preciso determinar se o serviço está sendo morto pelo kernel, encerrando sozinho ou sendo parado por outro processo.
+
+---
+
+## 10. 🛠️ Diagnóstico rápido de problemas
 
 ### 🔸 Continua em 640×480
 
@@ -405,7 +466,7 @@ Depois reinicie Moonraker/Mainsail conforme necessário.
 
 ---
 
-## 10. ↩️ Rollback
+## 11. ↩️ Rollback
 
 Para voltar ao serviço anterior:
 
@@ -449,3 +510,6 @@ Entware mjpg-streamer 2019-05-24-1
 - C0DEbrained/Creality-Helper-Script-2025 — lógica de instalação/configuração da câmera: https://github.com/C0DEbrained/Creality-Helper-Script-2025/blob/main/scripts/usb_camera.sh
 - mjpg-streamer upstream — problema `parse_resolution_opt`: https://github.com/jacksonliam/mjpg-streamer/issues/414
 - Registro histórico dos pacotes Entware 2019-05-24-1 e `libjpeg 9c-2`: https://forum.keenetic.ru/topic/7713-mjpg-streamer-%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2%D0%B5%D0%B1-%D0%BA%D0%B0%D0%BC%D0%B5%D1%80%D1%8B/page/3/
+---
+- Moonraker Timelapse — configuração de `autorender` e comportamento da renderização: https://github.com/mainsail-crew/moonraker-timelapse/blob/main/docs/configuration.md
+- Creality Helper Script — menu de ferramentas da K1 inclui a opção de reiniciar o serviço do Klipper: https://github.com/Guilouz/Creality-Helper-Script/blob/main/scripts/menu/K1/tools_menu_K1.sh
