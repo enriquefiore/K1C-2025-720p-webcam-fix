@@ -348,7 +348,68 @@ v4l2-ctl -d /dev/video0 --get-fmt-video
 
 ---
 
-## 9. 🛠️ Quick troubleshooting
+## 9. ⚠️ Known issue: Klipper may stop while a large timelapse is rendering
+
+On the tested K1C 2025, a second issue was observed after **long/large prints** with Moonraker Timelapse enabled. When the print finishes and the timelapse starts rendering, the printer may appear temporarily frozen or become inaccessible from the web interface. When Mainsail becomes reachable again, it may report that **Moonraker is running but cannot connect to Klipper**, while the timelapse render is still in progress.
+
+![Mainsail showing Moonraker disconnected from Klipper while timelapse is rendering](./assets/k1c_timelapse_klipper_disconnected.png)
+
+In the observed case, the **Klipper service was no longer running** and had to be started again manually.
+
+> [!IMPORTANT]
+> This behavior has been **observed**, but its exact cause has not yet been confirmed. It should not be described as a proven consequence of the 1280×720 camera workaround. A likely area to investigate is resource pressure during FFmpeg/timelapse rendering on the K1C's limited-memory host, but logs are required to distinguish an OOM kill from a service/firmware interaction.
+
+### Safe recovery after the print has fully finished
+
+If the print is complete and Mainsail reports Klipper as disconnected, restart the Klipper service over SSH:
+
+```sh
+/etc/init.d/S55klipper_service restart
+```
+
+The Helper Script also exposes **Tools → Restart Klipper service**.
+
+Before restarting Klipper, make sure the print has actually completed and there is no active motion that must be preserved.
+
+### Capture diagnostics before restarting Klipper
+
+If SSH is still available, collect the following information first:
+
+```sh
+date
+uptime
+free -m
+ps w | grep -E '[k]lippy|[m]oonraker|[f]fmpeg|[m]jpg_streamer'
+dmesg | grep -iE 'oom|out of memory|killed process' | tail -30
+```
+
+Also preserve the current logs when possible:
+
+```sh
+tail -n 200 /usr/data/printer_data/logs/klippy.log
+tail -n 200 /usr/data/printer_data/logs/moonraker.log
+```
+
+If `dmesg` reports an OOM kill involving Klipper or another critical process, the correct fix is to reduce rendering pressure rather than simply auto-restarting Klipper.
+
+### Recommended mitigation while this is being investigated
+
+Moonraker Timelapse supports disabling automatic rendering at the end of a print. For large prints, consider setting:
+
+```ini
+autorender: False
+```
+
+This lets the print finish without immediately starting FFmpeg. Render the timelapse later, when a temporary Klipper interruption is less disruptive.
+
+If automatic rendering is required and this issue persists, another conservative option is to use **640×360 @ 15 fps** for the camera. It remains true 16:9 but uses only one quarter of the pixels of 1280×720 per frame.
+
+> [!CAUTION]
+> Do **not** add an automatic Klipper restart loop yet. If Klipper is being killed because the system is under memory pressure, a watchdog may simply restart it into the same resource-starved condition. First identify whether the service is being killed by the kernel, exiting on its own, or being stopped by another process.
+
+---
+
+## 10. 🛠️ Quick troubleshooting
 
 ### 🔸 It is still 640×480
 
@@ -403,7 +464,7 @@ Restart Moonraker/Mainsail as needed.
 
 ---
 
-## 10. ↩️ Rollback
+## 11. ↩️ Rollback
 
 To restore the previous service:
 
@@ -448,3 +509,5 @@ Entware mjpg-streamer 2019-05-24-1
 - mjpg-streamer upstream — `parse_resolution_opt` issue: https://github.com/jacksonliam/mjpg-streamer/issues/414
 - Historical Entware package record for 2019-05-24-1 and `libjpeg 9c-2`: https://forum.keenetic.ru/topic/7713-mjpg-streamer-%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2%D0%B5%D0%B1-%D0%BA%D0%B0%D0%BC%D0%B5%D1%80%D1%8B/page/3/
 ---
+- Moonraker Timelapse — `autorender` configuration and render behavior: https://github.com/mainsail-crew/moonraker-timelapse/blob/main/docs/configuration.md
+- Creality Helper Script — K1 tools menu includes a Klipper service restart action: https://github.com/Guilouz/Creality-Helper-Script/blob/main/scripts/menu/K1/tools_menu_K1.sh
